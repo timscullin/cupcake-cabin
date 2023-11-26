@@ -42,7 +42,7 @@ const Game = () => {
   const [obstacleSpeed, setObstacleSpeed] = useState(5); // New state to track the obstacle speed
   useEffect(() => {
     if (level > 1) {
-      setObstacleSpeed((prevSpeed) => prevSpeed + 1.5); // Increase the obstacle speed with the level
+      setObstacleSpeed((prevSpeed) => prevSpeed + 1.3); // Increase the obstacle speed with the level
     }
   }, [level]);
 

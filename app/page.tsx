@@ -230,17 +230,18 @@ const Game = () => {
       });
 
       // Draw the current frame of the unicorn
-      ctx.drawImage(
-        unicornSprite.current,
-        currentFrame * frameWidth,
-        0, // x, y position on the sprite sheet
-        frameWidth,
-        frameHeight, // width and height of the frame
-        playerX - playerWidth / 2,
-        groundY - playerY, // x, y position on the canvas
-        playerWidth,
-        playerHeight // width and height on the canvas
-      );
+      if (unicornSprite.current)
+        ctx.drawImage(
+          unicornSprite.current,
+          currentFrame * frameWidth,
+          0, // x, y position on the sprite sheet
+          frameWidth,
+          frameHeight, // width and height of the frame
+          playerX - playerWidth / 2,
+          groundY - playerY, // x, y position on the canvas
+          playerWidth,
+          playerHeight // width and height on the canvas
+        );
 
       // Update the frame
       currentFrame = (currentFrame + 1) % totalFrames;

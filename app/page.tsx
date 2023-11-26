@@ -1,7 +1,7 @@
 "use client";
 
 import { HeartIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
 
 type Obstacle = {
@@ -99,12 +99,16 @@ const Game = () => {
     return false; // No collision
   };
 
-  const unicornSprite = useRef(new Image());
+  const unicornSprite = useRef<HTMLImageElement | null>(null);
   useEffect(() => {
-    unicornSprite.current.src = "/unicorn-sprite.png"; // Path to your image
-    unicornSprite.current.onload = () => {
-      // Image loaded
-    };
+    if (typeof window !== "undefined") {
+      const img = new Image();
+      img.src = "/unicorn-sprite.png"; // Path to your image
+      img.onload = () => {
+        // Image loaded
+      };
+      unicornSprite.current = img;
+    }
   }, []);
 
   const frameWidth = 200; // Width of each frame in the sprite sheet

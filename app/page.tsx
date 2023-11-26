@@ -39,7 +39,7 @@ const Game = () => {
     }
   }, [score]);
 
-  const [obstacleSpeed, setObstacleSpeed] = useState(10); // New state to track the obstacle speed
+  const [obstacleSpeed, setObstacleSpeed] = useState(5); // New state to track the obstacle speed
   useEffect(() => {
     if (level > 1) {
       setObstacleSpeed((prevSpeed) => prevSpeed + 1.5); // Increase the obstacle speed with the level
@@ -108,6 +108,18 @@ const Game = () => {
         // Image loaded
       };
       unicornSprite.current = img;
+    }
+  }, []);
+
+  const monsterImage = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const img = new Image();
+      img.src = "/monster.png"; // Path to your image
+      img.onload = () => {
+        // Image loaded
+      };
+      monsterImage.current = img;
     }
   }, []);
 
@@ -207,17 +219,16 @@ const Game = () => {
           );
           ctx.fill();
         } else {
-          // Draw monster as a circle
-          ctx.fillStyle = obstacle.color;
-          ctx.beginPath();
-          ctx.arc(
-            obstacle.x,
-            groundY - obstacle.height,
-            obstacle.height,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
+          // Draw monster using monster image
+          if (monsterImage.current) {
+            ctx.drawImage(
+              monsterImage.current,
+              obstacle.x,
+              groundY - obstacle.height,
+              obstacle.height,
+              obstacle.height
+            );
+          }
         }
 
         // Move the obstacle towards the player
@@ -259,20 +270,6 @@ const Game = () => {
         }
       }
 
-      // Spawn new obstacle
-      if (Math.random() < 0.01) {
-        setObstacles((prevObstacles) => [
-          ...prevObstacles,
-          {
-            x: ctx.canvas.width,
-            color: "red",
-            type: "obstacle",
-            height: 25,
-            y: 0,
-          }, // New obstacle at the edge
-        ]);
-      }
-
       // Spawn new tree
       if (Math.random() < 0.01) {
         setObstacles((prevObstacles) => [
@@ -300,7 +297,21 @@ const Game = () => {
           }, // New obstacle at the edge
         ]);
       }
-    }, 30); // The interval rate can be adjusted for smoother animation
+
+      // Spawn new obstacle
+      if (Math.random() < 0.01) {
+        setObstacles((prevObstacles) => [
+          ...prevObstacles,
+          {
+            x: ctx.canvas.width,
+            color: "red",
+            type: "obstacle",
+            height: 50,
+            y: 0,
+          }, // New obstacle at the edge
+        ]);
+      }
+    }, 20); // The interval rate can be adjusted for smoother animation
 
     return () => {
       clearInterval(gameLoop);

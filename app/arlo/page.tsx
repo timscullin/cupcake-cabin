@@ -176,8 +176,9 @@ function GameScreen({
       targets.forEach((target) => {
         if (target.isAlive) {
           // Draw the target
-          ctx.fillStyle = "black";
-          ctx.fillRect(target.x, target.y, target.width, target.height);
+          const img = new Image();
+          img.src = "baddie.png";
+          ctx.drawImage(img, target.x, target.y, target.width, target.height);
 
           // Draw the life bar above the target
           const lifeBarHeight = 5; // Height of the life bar

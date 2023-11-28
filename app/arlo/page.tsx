@@ -92,11 +92,13 @@ function GameScreen({
   const [score, setScore] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bullets = useRef<Bullet[]>([]);
-  const cannonAngle = useRef(0); // Angle in degrees
-  const cannonX = useRef(50); // Starting X position of the cannon
+  const rocketAngle = useRef(0); // Angle in degrees
+  const rocketX = useRef(50);
+  const rocketY = useRef(50); // Starting X position of the rocket
   const spaceBarPressed = useRef(false);
   const [automatic, setAutomatic] = useState(false);
   const automaticRef = useRef(automatic);
+  const targetCountRef = useRef(guys);
   useEffect(() => {
     automaticRef.current = automatic;
   }, [automatic]);
@@ -142,27 +144,41 @@ function GameScreen({
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const drawCannon = () => {
+    const drawrocket = () => {
       if (!canvasRef.current) return;
       const ctx = canvasRef.current.getContext("2d");
       if (!ctx) return;
-      const cannonLength = 60;
-      const cannonWidth = 10;
-      const cannonBaseX = cannonX.current; // Starting X position of the cannon
-      const cannonBaseY = canvasRef.current.height - 50; // Starting Y position of the cannon
+      const rocketSprite = new Image();
+      rocketSprite.src = "rocket.png"; // Assuming the sprite is in the same directory
+      const originalRocketWidth = 152;
+      const originalRocketHeight = 320;
+      const rocketWidth = originalRocketWidth / 4; // Scale down the rocket 4x
+      const rocketHeight = originalRocketHeight / 4; // Scale down the rocket 4x
+      const rocketBaseX = rocketX.current; // Starting X position of the rocket
+      const rocketBaseY = rocketY.current; // Starting Y position of the rocket
+      const spriteIndex = keyStates.ArrowUp ? 1 : 0; // If up arrow is pressed, use the second sprite
 
       // Save the current drawing state
       ctx.save();
 
       // Translate to the pivot point
-      ctx.translate(cannonBaseX, cannonBaseY);
+      ctx.translate(rocketBaseX, rocketBaseY);
 
       // Rotate the context according to the current angle
-      ctx.rotate((cannonAngle.current * Math.PI) / 180);
+      ctx.rotate((rocketAngle.current * Math.PI) / 180);
 
-      // Draw the cannon
-      ctx.fillStyle = "black";
-      ctx.fillRect(-cannonWidth / 2, -cannonLength, cannonWidth, cannonLength);
+      // Draw the rocket using the sprite
+      ctx.drawImage(
+        rocketSprite,
+        spriteIndex * originalRocketWidth,
+        0, // Source X and Y
+        originalRocketWidth,
+        originalRocketHeight, // Source width and height
+        -rocketWidth / 2,
+        -rocketHeight / 2, // Destination X and Y, adjusted to rotate from the center
+        rocketWidth,
+        rocketHeight // Destination width and height
+      );
 
       // Restore the original state
       ctx.restore();
@@ -242,12 +258,21 @@ function GameScreen({
       });
 
       // Remove dead targets and respawn new ones
-      targets.forEach((target, index) => {
+      targets.forEach((target) => {
         if (!target.isAlive) {
+          targets.splice(targets.indexOf(target), 1);
           playSound("/explosion.mp3");
-          targets[index] = createNewTarget();
         }
       });
+
+      if (targets.filter((target) => target.isAlive).length === 0) {
+        targetCountRef.current += 1;
+        targets.push(
+          ...Array(targetCountRef.current)
+            .fill(0)
+            .map(() => createNewTarget())
+        );
+      }
     };
 
     const drawBullets = () => {
@@ -282,10 +307,16 @@ function GameScreen({
     };
 
     const handleActions = () => {
-      if (keyStates.ArrowUp) cannonAngle.current -= 1;
-      if (keyStates.ArrowDown) cannonAngle.current += 1;
-      if (keyStates.ArrowLeft) cannonX.current -= 1;
-      if (keyStates.ArrowRight) cannonX.current += 1;
+      if (keyStates.ArrowLeft) rocketAngle.current -= 1;
+      if (keyStates.ArrowRight) rocketAngle.current += 1;
+      if (keyStates.ArrowUp) {
+        rocketX.current += Math.sin((rocketAngle.current * Math.PI) / 180);
+        rocketY.current -= Math.cos((rocketAngle.current * Math.PI) / 180);
+      }
+      if (keyStates.ArrowDown) {
+        rocketX.current -= Math.sin((rocketAngle.current * Math.PI) / 180);
+        rocketY.current += Math.cos((rocketAngle.current * Math.PI) / 180);
+      }
       if (automaticRef.current && keyStates[" "]) shoot();
       if (!automaticRef.current && keyStates[" "] && !spaceBarPressed.current) {
         shoot();
@@ -302,16 +333,16 @@ function GameScreen({
       const bulletSpeed = 5;
       const bulletRadius = 5;
 
-      // Calculate the bullet's velocity components based on the cannon's angle
-      const angleInRadians = ((90 - cannonAngle.current) * Math.PI) / 180;
+      // Calculate the bullet's velocity components based on the rocket's angle
+      const angleInRadians = ((90 - rocketAngle.current) * Math.PI) / 180;
 
       const velocityX = bulletSpeed * Math.cos(angleInRadians);
       const velocityY = -bulletSpeed * Math.sin(angleInRadians);
 
       // Create a new bullet object
       const bullet = {
-        x: cannonX.current, // Initial X position (same as the cannon's base)
-        y: canvasRef.current.height - 50, // Initial Y position (same as the cannon's base)
+        x: rocketX.current, // Initial X position (same as the rocket's base)
+        y: rocketY.current, // Initial Y position (same as the rocket's base)
         velocityX,
         velocityY,
         radius: bulletRadius,
@@ -355,7 +386,7 @@ function GameScreen({
       drawTargets();
       updateTargets();
       drawBullets();
-      drawCannon();
+      drawrocket();
       requestAnimationFrame(update);
     };
     update();

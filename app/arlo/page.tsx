@@ -307,15 +307,21 @@ function GameScreen({
     };
 
     const handleActions = () => {
-      if (keyStates.ArrowLeft) rocketAngle.current -= 1;
-      if (keyStates.ArrowRight) rocketAngle.current += 1;
+      const speedFactor = 3;
+      if (keyStates.ArrowLeft) rocketAngle.current -= speedFactor;
+      if (keyStates.ArrowRight) rocketAngle.current += speedFactor;
+
       if (keyStates.ArrowUp) {
-        rocketX.current += Math.sin((rocketAngle.current * Math.PI) / 180);
-        rocketY.current -= Math.cos((rocketAngle.current * Math.PI) / 180);
+        rocketX.current +=
+          speedFactor * Math.sin((rocketAngle.current * Math.PI) / 180);
+        rocketY.current -=
+          speedFactor * Math.cos((rocketAngle.current * Math.PI) / 180);
       }
       if (keyStates.ArrowDown) {
-        rocketX.current -= Math.sin((rocketAngle.current * Math.PI) / 180);
-        rocketY.current += Math.cos((rocketAngle.current * Math.PI) / 180);
+        rocketX.current -=
+          speedFactor * Math.sin((rocketAngle.current * Math.PI) / 180);
+        rocketY.current +=
+          speedFactor * Math.cos((rocketAngle.current * Math.PI) / 180);
       }
       if (automaticRef.current && keyStates[" "]) shoot();
       if (!automaticRef.current && keyStates[" "] && !spaceBarPressed.current) {

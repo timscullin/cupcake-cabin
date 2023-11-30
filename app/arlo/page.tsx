@@ -1,6 +1,6 @@
 "use client";
 // pages/index.tsx
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 type Bullet = {
   x: number;
@@ -22,20 +22,39 @@ type KeyState = {
 const Home = () => {
   const [playing, setPlaying] = useState(false);
   const [guys, setGuys] = useState(1);
+  const [score, setScore] = useState(0);
 
-  if (playing) return <GameScreen guys={guys} setPlaying={setPlaying} />;
+  if (playing)
+    return (
+      <GameScreen
+        guys={guys}
+        setPlaying={setPlaying}
+        score={score}
+        setScore={setScore}
+      />
+    );
   return (
-    <LoadingScreen setPlaying={setPlaying} guys={guys} setGuys={setGuys} />
+    <LoadingScreen
+      setPlaying={setPlaying}
+      guys={guys}
+      setGuys={setGuys}
+      score={score}
+      setScore={setScore}
+    />
   );
 };
 
 export default Home;
 
 function LoadingScreen({
+  score,
   guys,
+  setScore,
   setGuys,
   setPlaying,
 }: {
+  score: number;
+  setScore: Dispatch<SetStateAction<number>>;
   guys: number;
   setGuys: (guys: number) => void;
   setPlaying: (playing: boolean) => void;
@@ -43,6 +62,12 @@ function LoadingScreen({
   return (
     <div className="w-screen h-screen flex items-center justify-center">
       <div className="">
+        {score > 0 && (
+          <div className="text-center text-3xl font-bold">
+            <div className="">Game Over</div>
+            <div className="">Score: {score}</div>
+          </div>
+        )}
         <div className="text-xl font-bold m-4">Spider Game</div>
         <div className="font-semibold">Baddies</div>
         <select
@@ -73,7 +98,10 @@ function LoadingScreen({
         </select>
         <div
           className="bg-black rounded px-5 py-3 text-white cursor-pointer text-center"
-          onClick={() => setPlaying(true)}
+          onClick={() => {
+            setScore(0);
+            setPlaying(true);
+          }}
         >
           🔫 Play
         </div>
@@ -85,11 +113,14 @@ function LoadingScreen({
 function GameScreen({
   guys,
   setPlaying,
+  score,
+  setScore,
 }: {
   guys: number;
   setPlaying: (playing: boolean) => void;
+  score: number;
+  setScore: Dispatch<SetStateAction<number>>;
 }) {
-  const [score, setScore] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bullets = useRef<Bullet[]>([]);
   const rocketAngle = useRef(0); // Angle in degrees
@@ -99,6 +130,32 @@ function GameScreen({
   const [automatic, setAutomatic] = useState(false);
   const automaticRef = useRef(automatic);
   const targetCountRef = useRef(guys);
+
+  const [level, setLevel] = useState(1);
+  const updateLevel = () => {
+    setLevel((prev) => prev + 1);
+  };
+
+  const lives = useRef(3); // Ref for rocket lives
+  const [displayLives, setDisplayLives] = useState(lives.current); // State for displaying lives in UI
+  const updateLifeDisplay = () => {
+    setDisplayLives(lives.current); // Update the displayed life count
+  };
+
+  const invulnerable = useRef(false); // Ref for invulnerability
+  const invulnerabilityTimer = useRef<NodeJS.Timeout | null>(null); // Timer reference
+
+  useEffect(() => {
+    return () => {
+      if (invulnerabilityTimer.current) {
+        clearTimeout(invulnerabilityTimer.current); // Clear timer on component unmount
+      }
+    };
+  }, []);
+
+  const rocketWidth = 152 / 4;
+  const rocketHeight = 320 / 4;
+
   useEffect(() => {
     automaticRef.current = automatic;
   }, [automatic]);
@@ -117,8 +174,8 @@ function GameScreen({
       y: Math.random() * ((canvasRef.current?.height || 500) - 50), // Random Y position
       width: 100,
       height: 100,
-      initialLife: 100,
-      life: 100,
+      initialLife: 5,
+      life: 5,
       isAlive: true,
       velocityX: (Math.random() - 0.5) * 4, // Random X velocity
       velocityY: (Math.random() - 0.5) * 4, // Random Y velocity
@@ -148,12 +205,22 @@ function GameScreen({
       if (!canvasRef.current) return;
       const ctx = canvasRef.current.getContext("2d");
       if (!ctx) return;
+
+      if (invulnerable.current && canvasRef.current) {
+        const ctx = canvasRef.current.getContext("2d");
+        if (!ctx) return;
+
+        // Make the rocket flash by toggling its visibility
+        const flashInterval = 100; // Flash interval in milliseconds
+        if (Math.floor(Date.now() / flashInterval) % 2 === 0) {
+          ctx.globalAlpha = 0.5; // Set transparency for the flash effect
+        } else {
+          ctx.globalAlpha = 1;
+        }
+      }
+
       const rocketSprite = new Image();
       rocketSprite.src = "rocket.png"; // Assuming the sprite is in the same directory
-      const originalRocketWidth = 152;
-      const originalRocketHeight = 320;
-      const rocketWidth = originalRocketWidth / 4; // Scale down the rocket 4x
-      const rocketHeight = originalRocketHeight / 4; // Scale down the rocket 4x
       const rocketBaseX = rocketX.current; // Starting X position of the rocket
       const rocketBaseY = rocketY.current; // Starting Y position of the rocket
       const spriteIndex = keyStates.ArrowUp ? 1 : 0; // If up arrow is pressed, use the second sprite
@@ -170,10 +237,10 @@ function GameScreen({
       // Draw the rocket using the sprite
       ctx.drawImage(
         rocketSprite,
-        spriteIndex * originalRocketWidth,
+        spriteIndex * rocketWidth,
         0, // Source X and Y
-        originalRocketWidth,
-        originalRocketHeight, // Source width and height
+        rocketWidth,
+        rocketHeight, // Source width and height
         -rocketWidth / 2,
         -rocketHeight / 2, // Destination X and Y, adjusted to rotate from the center
         rocketWidth,
@@ -200,8 +267,8 @@ function GameScreen({
           const lifeBarHeight = 5; // Height of the life bar
           const lifeBarY = target.y - lifeBarHeight - 3; // Position the life bar above the target
 
-          const lifePercent = target.life / 100;
-          const lifeBarWidth = lifePercent * target.initialLife; // Width proportional to target's life
+          const lifePercent = target.life / target.initialLife;
+          const lifeBarWidth = lifePercent * 100; // Width proportional to target's life
 
           ctx.fillStyle = lifePercent < 0.2 ? "red" : "#00cc00"; // Slightly darker green
           ctx.fillRect(target.x, lifeBarY, lifeBarWidth, lifeBarHeight);
@@ -266,6 +333,8 @@ function GameScreen({
       });
 
       if (targets.filter((target) => target.isAlive).length === 0) {
+        makeRocketInvulnerable();
+        updateLevel();
         targetCountRef.current += 1;
         targets.push(
           ...Array(targetCountRef.current)
@@ -352,7 +421,7 @@ function GameScreen({
         velocityX,
         velocityY,
         radius: bulletRadius,
-        damage: 10,
+        damage: 1,
       };
 
       // Add the new bullet to the bullets array
@@ -374,8 +443,6 @@ function GameScreen({
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
-      console.log(e.key);
-
       if (isKeyOfKeyState(e.key)) {
         keyStates[e.key] = false;
         if (e.key === " ") {
@@ -384,11 +451,52 @@ function GameScreen({
       }
     };
 
+    const makeRocketInvulnerable = () => {
+      invulnerable.current = true;
+      if (invulnerabilityTimer.current)
+        clearTimeout(invulnerabilityTimer.current); // Clear existing timer if any
+
+      invulnerabilityTimer.current = setTimeout(() => {
+        invulnerable.current = false;
+        ctx.globalAlpha = 1; // Reset transparency
+      }, 2000); // Set invulnerability for 2 seconds
+    };
+
+    const checkRocketCollision = () => {
+      if (invulnerable.current) return; // Skip collision check if invulnerable
+
+      const rocketCollisionWidth = rocketWidth * 0.6;
+      const rocketCollisionHeight = rocketHeight * 0.6;
+
+      targets.forEach((target) => {
+        if (target.isAlive) {
+          const collision =
+            rocketX.current + rocketCollisionWidth / 2 > target.x &&
+            rocketX.current - rocketCollisionWidth / 2 <
+              target.x + target.width &&
+            rocketY.current + rocketCollisionHeight / 2 > target.y &&
+            rocketY.current - rocketCollisionHeight / 2 <
+              target.y + target.height;
+
+          if (collision) {
+            lives.current -= 1;
+            updateLifeDisplay();
+            makeRocketInvulnerable(); // Make rocket invulnerable after collision
+
+            if (lives.current <= 0) {
+              setPlaying(false);
+            }
+          }
+        }
+      });
+    };
+
     const update = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       handleActions();
 
       checkCollisions();
+      checkRocketCollision();
       drawTargets();
       updateTargets();
       drawBullets();
@@ -413,7 +521,15 @@ function GameScreen({
     <div className="">
       <div className="fixed top-4 right-4 flex flex-col gap-4 w-36 items-end">
         <div className="flex">
-          <div className="bg-black rounded p-4 text-white">{score}</div>
+          <div className="bg-black rounded p-4 text-white">Level: {level}</div>
+        </div>
+        <div className="flex">
+          <div className="bg-black rounded p-4 text-white">Score: {score}</div>
+        </div>
+        <div className="flex">
+          <div className="bg-black rounded p-4 text-white">
+            Lives: {displayLives}
+          </div>
         </div>
         <div
           className=" cursor-pointer rounded bg-green-600 text-white px-3 py-2 select-none"

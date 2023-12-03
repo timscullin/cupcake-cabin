@@ -376,7 +376,7 @@ function GameScreen({
     };
 
     const handleActions = () => {
-      const speedFactor = 3;
+      const speedFactor = 5;
       if (keyStates.ArrowLeft) rocketAngle.current -= speedFactor;
       if (keyStates.ArrowRight) rocketAngle.current += speedFactor;
 

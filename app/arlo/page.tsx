@@ -174,8 +174,8 @@ function GameScreen({
       y: Math.random() * ((canvasRef.current?.height || 500) - 50), // Random Y position
       width: 100,
       height: 100,
-      initialLife: 100,
-      life: 100,
+      initialLife: 5,
+      life: 5,
       isAlive: true,
       velocityX: (Math.random() - 0.5) * 4, // Random X velocity
       velocityY: (Math.random() - 0.5) * 4, // Random Y velocity

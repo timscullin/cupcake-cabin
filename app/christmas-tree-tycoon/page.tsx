@@ -99,7 +99,7 @@ export default function Farm() {
   );
 }
 
-export function Field({ field }: { field: Field }) {
+function Field({ field }: { field: Field }) {
   const [money, setMoney] = useAtom(moneyAtom);
   const [trees, setTrees] = useAtom(treesAtom);
   const [tractors, setTractors] = useAtom(tractorsAtom);

@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "canvas-confetti": "^1.9.2",
+    "clsx": "^2.0.0",
     "install": "^0.13.0",
+    "jotai": "^2.6.0",
     "lucide-react": "^0.293.0",
     "next": "14.0.3",
     "react": "^18",

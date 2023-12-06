@@ -62,6 +62,18 @@ function LoadingScreen({
   setGuys: (guys: number) => void;
   setPlaying: (playing: boolean) => void;
 }) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        setPlaying(true);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setPlaying]);
+
   return (
     <div className="w-screen h-screen flex items-center justify-center">
       <div className="w-72 flex-col flex gap-3">
@@ -440,6 +452,7 @@ function GameScreen({
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        playSound("/game-over.mp3");
         setPlaying(false);
       }
 
@@ -490,7 +503,10 @@ function GameScreen({
             makeRocketInvulnerable(); // Make rocket invulnerable after collision
 
             if (lives.current <= 0) {
+              playSound("/game-over.mp3");
               setPlaying(false);
+            } else {
+              playSound("/lose-life.wav");
             }
           }
         }

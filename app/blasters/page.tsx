@@ -24,23 +24,26 @@ const Home = () => {
   const [guys, setGuys] = useState(1);
   const [score, setScore] = useState(0);
 
-  if (playing)
-    return (
-      <GameScreen
-        guys={guys}
-        setPlaying={setPlaying}
-        score={score}
-        setScore={setScore}
-      />
-    );
   return (
-    <LoadingScreen
-      setPlaying={setPlaying}
-      guys={guys}
-      setGuys={setGuys}
-      score={score}
-      setScore={setScore}
-    />
+    <div className="bg-[url('/blasters-bg.png')]">
+      {playing && (
+        <GameScreen
+          guys={guys}
+          setPlaying={setPlaying}
+          score={score}
+          setScore={setScore}
+        />
+      )}
+      {!playing && (
+        <LoadingScreen
+          setPlaying={setPlaying}
+          guys={guys}
+          setGuys={setGuys}
+          score={score}
+          setScore={setScore}
+        />
+      )}
+    </div>
   );
 };
 
@@ -61,49 +64,52 @@ function LoadingScreen({
 }) {
   return (
     <div className="w-screen h-screen flex items-center justify-center">
-      <div className="">
+      <div className="w-72 flex-col flex gap-3">
         {score > 0 && (
-          <div className="text-center text-3xl font-bold">
-            <div className="">Game Over</div>
-            <div className="">Score: {score}</div>
+          <div className="px-10 py-6 bg-gray-600 text-white rounded-xl">
+            <div className="font-black italic uppercase">Game Over</div>
+            <div className="text-xl">Score: {score}</div>
+            <div className="text-white/50">Play Again?</div>
           </div>
         )}
-        <div className="text-xl font-bold m-4">Spider Game</div>
-        <div className="font-semibold">Baddies</div>
-        <select
-          value={guys}
-          onChange={(e) => setGuys(Number(e.currentTarget.value))}
-          className="border-gray-400 border-2 rounded py-1 pl-4 cursor-pointer w-full mb-2"
-        >
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-          <option value="11">11</option>
-          <option value="12">12</option>
-          <option value="13">13</option>
-          <option value="14">14</option>
-          <option value="15">15</option>
-          <option value="16">16</option>
-          <option value="17">17</option>
-          <option value="18">18</option>
-          <option value="19">19</option>
-          <option value="20">20</option>
-        </select>
-        <div
-          className="bg-black rounded px-5 py-3 text-white cursor-pointer text-center"
-          onClick={() => {
-            setScore(0);
-            setPlaying(true);
-          }}
-        >
-          🔫 Play
+        <div className="bg-white rounded px-10 py-8 w-full">
+          <div className="text-xl font-black italic">Blasters</div>
+          <div className="font-semibold">Baddies</div>
+          <select
+            value={guys}
+            onChange={(e) => setGuys(Number(e.currentTarget.value))}
+            className="border-gray-400 border-2 rounded py-1 pl-4 cursor-pointer w-full mb-2"
+          >
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18</option>
+            <option value="19">19</option>
+            <option value="20">20</option>
+          </select>
+          <div
+            className="bg-black rounded px-5 py-3 text-white cursor-pointer text-center"
+            onClick={() => {
+              setScore(0);
+              setPlaying(true);
+            }}
+          >
+            🚀 Play
+          </div>
         </div>
       </div>
     </div>
